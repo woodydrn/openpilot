@@ -1,14 +1,12 @@
 import os
-import subprocess
 
 from cffi import FFI
+from common.ffi_wrapper import suffix
 
 mpc_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-subprocess.check_call(["make", "-j4"], cwd=mpc_dir)
-
 
 def _get_libmpc(mpc_id):
-    libmpc_fn = os.path.join(mpc_dir, "libmpc%d.so" % mpc_id)
+    libmpc_fn = os.path.join(mpc_dir, "libmpc%d%s" % (mpc_id, suffix()))
 
     ffi = FFI()
     ffi.cdef("""
@@ -21,9 +19,10 @@ def _get_libmpc(mpc_id):
     double x_ego[21];
     double v_ego[21];
     double a_ego[21];
-    double j_ego[21];
+    double j_ego[20];
     double x_l[21];
     double v_l[21];
+    double a_l[21];
     double t[21];
     double cost;
     } log_t;
@@ -36,9 +35,7 @@ def _get_libmpc(mpc_id):
 
     return (ffi, ffi.dlopen(libmpc_fn))
 
-
 mpcs = [_get_libmpc(1), _get_libmpc(2)]
-
 
 def get_libmpc(mpc_id):
     return mpcs[mpc_id - 1]
